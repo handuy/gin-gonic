@@ -2,6 +2,8 @@
 
 1. Setup
 
+Xem thêm tại: https://github.com/handuy/gin-gonic/tree/master/gorm/connect-mysql-db
+
 2. Tạo struct hứng dữ liệu đổ về
 
 ```go

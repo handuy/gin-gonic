@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
-	model "gin-gonic/gorm/raw-sql/model"
-)
+	model "gin-gonic/gorm/raw-select/model"
+) 
 
 type Employee struct {
 	Name string

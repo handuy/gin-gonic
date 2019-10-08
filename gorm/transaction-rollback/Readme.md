@@ -15,35 +15,30 @@ tx := db.Begin()
 - Nếu xảy ra lỗi --> tx.Rollback() để cancel transaction
 - Tất cả các CRUD operation thành công --> tx.Commit() để lưu thay đổi vào disk
 
-Để kiểm tra lỗi của từng CRUD opertion, dùng method GetErrors và check length của slice trả về
-
 ```go
 var department = Department{
-	DeptNo:   "d011",
-	DeptName: "Design",
+	DeptNo:   "d012",
+	DeptName: "Technical",
 }
 
 tx := db.Begin()
 
-errorList := tx.Exec(`
-	UPDATE departments
+errorInsert := tx.Exec(`
+	INSERT INTO departments VALUES (?, ?)`, department.DeptNo, department.DeptName).Error
+if errorInsert != nil {
+	tx.Rollback()
+	return
+}
+
+errorUpdate := tx.Exec(`
+	UPDATEEEEE departments
 	SET dept_name = 'Quality Test'
 	WHERE dept_no = ?
-`, "d006").GetErrors()
-if len(errorList) != 0 {
+`, "d006").Error
+if errorUpdate != nil {
 	tx.Rollback()
 	return
 }
-
-// log.Println("errors", errorList, len(errorList))
-
-errorList = tx.Create(department).GetErrors()
-if len(errorList) != 0 {
-	tx.Rollback()
-	return
-}
-
-// log.Println("errors", errorList, len(errorList))
 
 tx.Commit()
 ```

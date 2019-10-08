@@ -23,19 +23,19 @@ func main() {
 
 	tx := db.Begin()
 
-	errorList := tx.Exec(`
-		INSERT INTO departments VALUES (?, ?)`, department.DeptNo, department.DeptName).GetErrors()
-	if len(errorList) != 0 {
+	errorInsert := tx.Exec(`
+		INSERT INTO departments VALUES (?, ?)`, department.DeptNo, department.DeptName).Error
+	if errorInsert != nil {
 		tx.Rollback()
 		return
 	}
 
-	errorList = tx.Exec(`
+	errorUpdate := tx.Exec(`
 		UPDATEEEEE departments
 		SET dept_name = 'Quality Test'
 		WHERE dept_no = ?
-	`, "d006").GetErrors()
-	if len(errorList) != 0 {
+	`, "d006").Error
+	if errorUpdate != nil {
 		tx.Rollback()
 		return
 	}

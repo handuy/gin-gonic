@@ -1,4 +1,4 @@
-## Tạo foreign key constraint cho cột trong bảng
+## Tạo transaction
 
 1. Setup
 

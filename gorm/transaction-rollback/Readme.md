@@ -14,6 +14,7 @@ tx := db.Begin()
 
 - Nếu xảy ra lỗi --> tx.Rollback() để cancel transaction
 - Tất cả các CRUD operation thành công --> tx.Commit() để lưu thay đổi vào disk
+
 Để kiểm tra lỗi của từng CRUD opertion, dùng method GetErrors và check length của slice trả về
 
 ```go

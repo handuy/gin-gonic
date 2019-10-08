@@ -22,6 +22,9 @@ func main() {
 	}
 
 	tx := db.Begin()
+	if err := tx.Error; err != nil {
+		return
+	}
 
 	errorInsert := tx.Exec(`
 		INSERT INTO departments VALUES (?, ?)`, department.DeptNo, department.DeptName).Error

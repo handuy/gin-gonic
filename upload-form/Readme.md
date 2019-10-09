@@ -19,7 +19,6 @@
         <button type="submit" class="registerbtn">Đăng kí</button>
     </div>
 </form>
-}
 ```
 
 2. Đăng kí GET route trả về form đăng kí trên 

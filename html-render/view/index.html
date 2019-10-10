@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="/resources/css/style.css">
+    <title>Trang chủ</title>
+</head>
+<body>
+    <h1> {{ .Name }} </h1>
+    <h2> {{ .Age }} </h2>
+    <h3> {{ .CurrentClub }} </h3>
+
+    {{if ge .Age 30}}
+    <h3>Experienced player</h3>
+    {{else}}
+    <h3>Young player</h3>
+    {{end}}
+
+    {{range $i, $e := .ClubList}}
+    <div>
+        <span>{{ $i }}</span>
+        <span>{{.Name}}</span>
+        <span>{{.Year}}</span>
+        <span>{{.Nation}}</span>
+    </div>
+    {{end}}
+</body>
+</html>

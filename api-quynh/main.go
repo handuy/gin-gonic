@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gin-gonic/hash-password-bcrypt/controller"
+	"gin-gonic/api-quynh/controller"
 
 	"github.com/gin-gonic/gin"
 )

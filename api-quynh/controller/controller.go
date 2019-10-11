@@ -6,11 +6,25 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/rs/xid"
 )
 
+type ErrorMesssage struct {
+	Message string `json:"message"`
+}
+
+type LoginResponse struct {
+	Success bool `json:"success"`
+}
+
 type Account struct {
-	Email    string
-	Password string
+	Id       string  `json:"id"`
+	Name string  `json:"name"`
+	Phone    string  `json:"phone"`
+	Avatar   string  `json:"avatar"`
+	Address  string  `json:"address"`
+	Password string  `json:"password"`
+	Message  string `json:"message"`
 }
 
 var userList = []Account{}
@@ -40,8 +54,22 @@ func FailPage(c *gin.Context) {
 }
 
 func Register(c *gin.Context) {
-	email := c.PostForm("email")
+	phone := c.PostForm("phone")
 	password := c.PostForm("password")
+
+	if phone == "" {
+		c.JSON(http.StatusBadRequest, ErrorMesssage{
+			Message: "Số điện thoại không được để trống",
+		})
+		return
+	}
+
+	if len(password) < 4 {
+		c.JSON(http.StatusBadRequest, ErrorMesssage{
+			Message: "Mật khẩu phải có tối thiểu 4 kí tự",
+		})
+		return
+	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
@@ -49,34 +77,50 @@ func Register(c *gin.Context) {
 	}
 
 	passwordHash := string(hash)
+	userID := xid.New().String()
 
 	var newUser = Account{
-		Email:    email,
+		Id: userID,
+		Name: "",
+		Phone:    phone,
+		Avatar: "",
+		Address: "",
 		Password: passwordHash,
+		Message: "success",
 	}
 	userList = append(userList, newUser)
 
-	c.Redirect(http.StatusFound, "/")
+	var userJSON = Account{
+		Id: userID,
+		Name: "",
+		Phone:    phone,
+		Avatar: "",
+		Address: "",
+		Message: "success",
+	}
+	c.JSON(http.StatusOK, userJSON)
 	return
 }
 
 func Login(c *gin.Context) {
-	email := c.PostForm("email")
+	phone := c.PostForm("phone")
 	password := c.PostForm("password")
 
 	for _, user := range userList {
-		if user.Email == email {
+		if user.Phone == phone {
 			byteHash := []byte(user.Password)
 			err := bcrypt.CompareHashAndPassword(byteHash, []byte(password))
 			if err == nil {
-				c.Redirect(http.StatusFound, "/success")
+				c.JSON(http.StatusOK, user)
 				return
 			}
 		}
 
 	}
 
-	c.Redirect(http.StatusFound, "/fail")
+	c.JSON(http.StatusUnauthorized, Account{
+		Message: "fail",
+	})
 	return
 }
 

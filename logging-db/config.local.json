@@ -1,0 +1,8 @@
+{
+    "database": {
+       "user": "root",
+       "password": "123",
+       "database": "employees",
+       "address": "localhost:8080"
+    }    
+}

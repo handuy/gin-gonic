@@ -1,0 +1,82 @@
+definitions:
+  controller.Account:
+    properties:
+      address:
+        type: string
+      avatar:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+    type: object
+  controller.ErrorMesssage:
+    properties:
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+  license: {}
+paths:
+  /login:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Đăng nhập
+      parameters:
+      - description: Số điện thoại
+        in: formData
+        name: phone
+        required: true
+        type: string
+      - description: Mật khẩu tối thiểu 4 kí tự
+        in: formData
+        name: password
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.Account'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.Account'
+  /signup:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Đăng kí tài khoản mới
+      parameters:
+      - description: Số điện thoại
+        in: formData
+        name: phone
+        required: true
+        type: string
+      - description: Mật khẩu tối thiểu 4 kí tự
+        in: formData
+        name: password
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.Account'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.ErrorMesssage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ErrorMesssage'
+swagger: "2.0"

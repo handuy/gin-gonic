@@ -21,6 +21,10 @@ type Controller struct {
 	DB *gorm.DB
 }
 
+config := model.SetupConfig()
+db := model.ConnectDb(config.Database.User, config.Database.Password, config.Database.Database, config.Database.Address)
+defer db.Close()
+
 control := &controller.Controller{DB: db}
 
 router.GET("/", control.HomePage)

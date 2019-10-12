@@ -6,6 +6,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"encoding/gob"
 )
 
 func main() {
@@ -19,6 +20,7 @@ func main() {
 	store.Options(sessions.Options{
 		HttpOnly: true,
 	})
+	gob.Register(&controller.Account{})
 
 	// router.Use(sessions.Sessions("khapxungquanh", store))
 
@@ -28,6 +30,7 @@ func main() {
 
 	router.POST("/signup", controller.Register)
 	router.POST("/login", sessions.Sessions("hungdung", store), controller.Login)
+	router.GET("/logout", sessions.Sessions("hungdung", store), controller.Logout)
 
 	// router.GET("/count", sessions.Sessions("hungdung", store), controller.AboutPage)
 

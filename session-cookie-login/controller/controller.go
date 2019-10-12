@@ -28,16 +28,16 @@ var userList = []Account{}
 
 func HomePage(c *gin.Context) {
 	session := sessions.Default(c)
-	switch session.Get("userId").(type) {
-	case nil:
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Authenticated": false,
-		})
-	case string: 
-		userName := session.Get("userEmail").(string)
+	v, ok := session.Get("user").(*Account)
+	if ok {
+		userName := v.Email
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"Title": "Welcome " + " " + userName,
 			"Authenticated": true,
+		})
+	} else {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"Authenticated": false,
 		})
 	}
 }
@@ -97,23 +97,29 @@ func Login(c *gin.Context) {
 			err := bcrypt.CompareHashAndPassword(byteHash, []byte(password))
 			if err == nil {
 				session := sessions.Default(c)
-				session.Set("userId", user.Id)
-				session.Set("userEmail", user.Email)
+				// session.Set("userId", user.Id)
+				// session.Set("userEmail", user.Email)
+
+				session.Set("user", user)
 				session.Save()
 
-				c.JSON(http.StatusOK, LoginResponse{
-					Success: true,
-				})
+				c.Redirect(http.StatusFound, "/")
 				return
 			}
 		}
 
 	}
 
-	c.JSON(http.StatusUnauthorized, LoginResponse{
-		Success: false,
-	})
+	c.Redirect(http.StatusFound, "/")
 	return
+}
+
+func Logout(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Delete("user")
+	session.Save()
+
+	c.Redirect(http.StatusFound, "/")
 }
 
 func AboutPage(c *gin.Context) {

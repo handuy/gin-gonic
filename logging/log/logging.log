@@ -1,0 +1,4 @@
+time="2019-10-12T09:10:53+07:00" level=error msg="Định dạng không hợp lệ. Yêu cầu: mp4" Error="Định dạng không hợp lệ. Yêu cầu: mp4" Path=/upload-video Time="2019-10-12 09:10:53.860303 +0700 +07 m=+19.269711617"
+time="2019-10-12T09:12:47+07:00" level=error msg="Định dạng không hợp lệ. Yêu cầu: mp4" Path=/upload-video Time="2019-10-12 09:12:47.071071 +0700 +07 m=+8.262930654"
+time="2019-10-12T09:14:08+07:00" level=error msg="Định dạng không hợp lệ. Yêu cầu: mp4" Path=/upload-video
+time="2019-10-12T09:17:06+07:00" level=error msg="Định dạng không hợp lệ. Yêu cầu: mp4" Method=POST Path=/upload-video

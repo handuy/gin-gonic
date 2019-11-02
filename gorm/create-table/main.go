@@ -1,20 +1,18 @@
 package main
 
 import (
-	"time"
-
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	model "gin-gonic/gorm/create-table/model"
-) 
+)
 
-type Company struct {
-	Id        int `gorm:"primary_key"`
-	Name      string `gorm:"type:varchar(100)"`
-	Address   string `gorm:"type:varchar(100)"`
-	IsGlobal  bool
-	CreatedAt time.Time
-	OtherInfo model.ManagerInfo   `sql:"TYPE:json"`
+type User struct {
+	Id       int    `gorm:"primary_key"`
+	Name     string `gorm:"type:varchar(100)"`
+	Email    string `gorm:"type:varchar(100)"`
+	Password string `gorm:"type:varchar(100)"`
+	Phone    string `gorm:"type:varchar(100)"`
+	Avatar   string `gorm:"type:varchar(100)"`
+	Address  string `gorm:"type:varchar(100)"`
 }
 
 func main() {
@@ -24,9 +22,9 @@ func main() {
 	}
 	db.LogMode(true)
 
-	var company Company
+	var user User
 
-	db.CreateTable(company)
+	db.CreateTable(user)
 
 	defer db.Close()
 }

@@ -1,0 +1,8 @@
+{
+    "database": {
+       "user": "root",
+       "password": "123",
+       "database": "fifa_19",
+       "address": "localhost:8080"
+    }    
+}

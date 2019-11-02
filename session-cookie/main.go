@@ -16,6 +16,9 @@ func main() {
 
 	// Tạo cookie store dùng để lưu session bên trong secure cookie
 	store := cookie.NewStore([]byte("tuananh"))
+	store.Options(sessions.Options{
+		HttpOnly: true,
+	})
 
 	// router.Use(sessions.Sessions("khapxungquanh", store))
 

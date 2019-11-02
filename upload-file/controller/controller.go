@@ -25,10 +25,6 @@ func UploadVideo(c *gin.Context) {
 		return
 	}
 
-	// log.Println(file.Filename)
-	// log.Println(file.Header)
-	// log.Println(file.Header["Content-Type"][0])
-
 	err = c.SaveUploadedFile(file, path.Join("./upload", file.Filename))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())

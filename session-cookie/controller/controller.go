@@ -8,8 +8,7 @@ import (
 )
 
 func HomePage(c *gin.Context) {
-	var count = 0
-	c.JSON(http.StatusOK, count)
+	
 }
 
 func AboutPage(c *gin.Context) {

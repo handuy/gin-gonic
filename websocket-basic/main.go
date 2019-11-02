@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"gin-gonic/websocket-basic/controller"
+	"gin-gonic/websocket-chat/controller"
 )
 
 func main() {

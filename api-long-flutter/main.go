@@ -26,6 +26,10 @@ func main() {
 	router.POST("/login-json", ginController.LoginJSON)
 
 	router.GET("/issues", jwt.Auth(model.SecretKey), ginController.ListIssues)
+	router.GET("/issues/:id", jwt.Auth(model.SecretKey), ginController.IssueDetail)
+	router.POST("/create-issue", jwt.Auth(model.SecretKey), ginController.CreateIssue)
+
+	router.GET("/profile", jwt.Auth(model.SecretKey), ginController.ProfileDetail)
 
 	router.Run(":8085")
 }

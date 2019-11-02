@@ -57,11 +57,22 @@ type Issue struct {
 
 type IssueGeneralInfo struct {
 	ID          string    `json:"id"`
-	Processed   string    `json:"processed"`
+	Status      string    `json:"status"`
 	Title       string    `json:"title"`
 	Address     string    `json:"add"`
 	Time        string    `json:"time"`
 	Date        string    `json:"date"`
+}
+
+type IssueDetailInfo struct {
+	ID          string    `json:"id"`
+	Status      string    `json:"status"`
+	Title       string    `json:"title"`
+	Content     string    `json:"content"`
+	Address     string    `json:"add"`
+	Time        string    `json:"time"`
+	Date        string    `json:"date"`
+	Media       string    `json:"media"`
 }
 
 type IssuesInfo struct {
@@ -75,6 +86,28 @@ type ListIssues struct {
 	Message      string     `json:"message"`
 	Data         IssuesInfo `json:"data"`
 }
+
+type IssueDetailRsp struct {
+	ResponseTime string          `json:"responseTime"`
+	Code         int             `json:"code"`
+	Message      string          `json:"message"`
+	Data         IssueDetailInfo `json:"data"`
+}
+
+type CreateIssueReq struct {
+	Title      string     `json:"title"`
+	Content    string     `json:"content"`
+	Address    string     `json:"add"`
+	Status     int        `json:"status"`
+	Media      []string   `json:"media"`
+}
+
+type CreateIssueRsp struct {
+	ResponseTime string          `json:"responseTime"`
+	Code         int             `json:"code"`
+	Message      string          `json:"message"`
+	Data         Issue           `json:"data"`
+} 
 
 type Config struct {
 	Database struct {

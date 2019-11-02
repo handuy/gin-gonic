@@ -3,6 +3,7 @@ package controller
 import (
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -76,9 +77,9 @@ func (gc *Controller) Register(c *gin.Context) {
 	// Truyền dữ liệu vào phần Claim của token
 	// Dữ liệu có kiểu map[string]interface{} mô phỏng một cấu trúc dạng JSON
 	token.Claims = jwt_lib.MapClaims{
-		"Phone": phone,
-		"Role":  1,
-		"exp":   time.Now().Add(time.Hour * 1).Unix(),
+		"userId": userID,
+		"Role":   1,
+		"exp":    time.Now().Add(time.Hour * 1).Unix(),
 	}
 
 	// Tạo Signature cho token
@@ -182,9 +183,9 @@ func (gc *Controller) RegisterJSON(c *gin.Context) {
 	// Truyền dữ liệu vào phần Claim của token
 	// Dữ liệu có kiểu map[string]interface{} mô phỏng một cấu trúc dạng JSON
 	token.Claims = jwt_lib.MapClaims{
-		"Phone": registerInfo.Phone,
-		"Role":  1,
-		"exp":   time.Now().Add(time.Hour * 1).Unix(),
+		"userId": userID,
+		"Role":   1,
+		"exp":    time.Now().Add(time.Hour * 1).Unix(),
 	}
 
 	// Tạo Signature cho token
@@ -253,9 +254,9 @@ func (gc *Controller) Login(c *gin.Context) {
 	// Truyền dữ liệu vào phần Claim của token
 	// Dữ liệu có kiểu map[string]interface{} mô phỏng một cấu trúc dạng JSON
 	token.Claims = jwt_lib.MapClaims{
-		"Phone": phone,
-		"Role":  user.Role,
-		"exp":   time.Now().Add(time.Hour * 1).Unix(),
+		"userId": user.ID,
+		"Role":   user.Role,
+		"exp":    time.Now().Add(time.Hour * 1).Unix(),
 	}
 
 	// Tạo Signature cho token
@@ -330,9 +331,9 @@ func (gc *Controller) LoginJSON(c *gin.Context) {
 	// Truyền dữ liệu vào phần Claim của token
 	// Dữ liệu có kiểu map[string]interface{} mô phỏng một cấu trúc dạng JSON
 	token.Claims = jwt_lib.MapClaims{
-		"Phone": loginInfo.Phone,
-		"Role":  user.Role,
-		"exp":   time.Now().Add(time.Hour * 1).Unix(),
+		"userId": user.ID,
+		"Role":   user.Role,
+		"exp":    time.Now().Add(time.Hour * 1).Unix(),
 	}
 
 	// Tạo Signature cho token
@@ -401,32 +402,34 @@ func (gc *Controller) ListIssues(c *gin.Context) {
 		return
 	}
 
-	var phoneFromToken string
+	var userId string
 	var roleFromToken int
 
 	for k, v := range claims {
-		if k == "Phone" {
-			phoneFromToken = v.(string)
+		if k == "userId" {
+			userId = v.(string)
 		}
 
 		if k == "Role" {
-			roleFromToken = int( v.(float64) )
+			roleFromToken = int(v.(float64))
 		}
 	}
 
-	log.Println("--------", phoneFromToken, roleFromToken)
-	if phoneFromToken == "" {
+	log.Println("--------", userId, roleFromToken)
+	if userId == "" {
 		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
-			Message: "Số điện thoại không hợp lệ",
+			Message: "Token không hợp lệ",
 		})
 	}
 
 	var issuesInfo []model.IssueGeneralInfo
 	errGetIssues := gc.DB.Raw(`
-		SELECT id, CASE WHEN status = 0 THEN 'Chưa xử lý' ELSE 'Đã xử lý' END AS processed, 
+		SELECT id, 
+		CASE WHEN status = 0 THEN 'Chưa xử lý' WHEN 1 THEN 'Đang xử lý' ELSE 'Đã xử lý' END AS processed, 
 		title, address, DATE_FORMAT(created_at, '%d-%m-%Y') AS date, TIME(created_at) AS time 
 		FROM issue
-	`).Scan(&issuesInfo).Error
+		WHERE created_by = ?
+	`, userId).Scan(&issuesInfo).Error
 	if errGetIssues != nil {
 		log.Println(errGetIssues)
 		c.JSON(http.StatusInternalServerError, model.ErrorMesssage{
@@ -435,5 +438,287 @@ func (gc *Controller) ListIssues(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, issuesInfo)
+	var issueInfo = model.IssuesInfo{
+		ResultCount: strconv.Itoa(len(issuesInfo)),
+		Result:      issuesInfo,
+	}
+
+	var rsp = model.ListIssues{
+		ResponseTime: time.Now().String(),
+		Code:         0,
+		Message:      "Lấy danh sách issue thành công",
+		Data:         issueInfo,
+	}
+
+	c.JSON(http.StatusOK, rsp)
 }
+
+
+func (gc *Controller) IssueDetail(c *gin.Context) {
+	var headerInfo model.AuthorizationHeader
+
+	if err := c.ShouldBindHeader(&headerInfo); err != nil {
+		c.JSON(200, err)
+	}
+
+	tokenFromHeader := strings.Replace(headerInfo.Token, "Bearer ", "", -1)
+
+	claims := jwt_lib.MapClaims{}
+	tkn, err := jwt_lib.ParseWithClaims(tokenFromHeader, claims, func(token *jwt_lib.Token) (interface{}, error) {
+		return []byte(model.SecretKey), nil
+	})
+
+	if err != nil {
+		if err == jwt_lib.ErrSignatureInvalid {
+			log.Println("error 1")
+			c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+				Message: "Token không hợp lệ",
+			})
+			return
+		}
+		log.Println("error 2", err)
+		c.JSON(http.StatusBadRequest, model.ErrorMesssage{
+			Message: "Bad request",
+		})
+		return
+	}
+
+	if !tkn.Valid {
+		log.Println("error 3")
+		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+			Message: "Token không hợp lệ",
+		})
+		return
+	}
+
+	var userId string
+	var roleFromToken int
+
+	for k, v := range claims {
+		if k == "userId" {
+			userId = v.(string)
+		}
+
+		if k == "Role" {
+			roleFromToken = int(v.(float64))
+		}
+	}
+
+	log.Println("--------", userId, roleFromToken)
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+			Message: "Token không hợp lệ",
+		})
+	}
+
+	issueId := c.Param("id")
+
+	var issuesInfo model.IssueDetailInfo
+	errGetIssues := gc.DB.Raw(`
+		SELECT id, 
+		CASE WHEN status = 0 THEN 'Chưa xử lý' WHEN 1 THEN 'Đang xử lý' ELSE 'Đã xử lý' END AS status, 
+		title, content, address, DATE_FORMAT(created_at, '%d-%m-%Y') AS date, TIME(created_at) AS time, media
+		FROM issue
+		WHERE created_by = ?
+		AND id = ?
+	`, userId, issueId).Scan(&issuesInfo).Error
+	if errGetIssues != nil {
+		log.Println(errGetIssues)
+		c.JSON(http.StatusInternalServerError, model.ErrorMesssage{
+			Message: "Lỗi server",
+		})
+		return
+	}
+
+	var rsp = model.IssueDetailRsp{
+		ResponseTime: time.Now().String(),
+		Code:         0,
+		Message:      "Lấy issue thành công",
+		Data:         issuesInfo,
+	}
+
+	c.JSON(http.StatusOK, rsp)
+}
+
+func (gc *Controller) CreateIssue(c *gin.Context) {
+	var headerInfo model.AuthorizationHeader
+
+	if err := c.ShouldBindHeader(&headerInfo); err != nil {
+		c.JSON(200, err)
+	}
+
+	tokenFromHeader := strings.Replace(headerInfo.Token, "Bearer ", "", -1)
+
+	claims := jwt_lib.MapClaims{}
+	tkn, err := jwt_lib.ParseWithClaims(tokenFromHeader, claims, func(token *jwt_lib.Token) (interface{}, error) {
+		return []byte(model.SecretKey), nil
+	})
+
+	if err != nil {
+		if err == jwt_lib.ErrSignatureInvalid {
+			log.Println("error 1")
+			c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+				Message: "Token không hợp lệ",
+			})
+			return
+		}
+		log.Println("error 2", err)
+		c.JSON(http.StatusBadRequest, model.ErrorMesssage{
+			Message: "Bad request",
+		})
+		return
+	}
+
+	if !tkn.Valid {
+		log.Println("error 3")
+		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+			Message: "Token không hợp lệ",
+		})
+		return
+	}
+
+	var userId string
+	var roleFromToken int
+
+	for k, v := range claims {
+		if k == "userId" {
+			userId = v.(string)
+		}
+
+		if k == "Role" {
+			roleFromToken = int(v.(float64))
+		}
+	}
+
+	log.Println("--------", userId, roleFromToken)
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+			Message: "Token không hợp lệ",
+		})
+	}
+
+	var createIssue model.CreateIssueReq
+	err = c.BindJSON(&createIssue)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, model.ErrorMesssage{
+			Message: "Yêu cầu tạo issue không hợp lệ",
+		})
+		return
+	}
+
+	var issueInsert = model.Issue{
+		ID: xid.New().String(),
+		Title: createIssue.Title,
+		Content: createIssue.Content,
+		Address: createIssue.Address,
+		CreatedAt: time.Now(),
+		Status: 0,
+		Media: createIssue.Media,
+		CreatedBy: userId,
+	}
+
+	errInsert := gc.DB.Table("issue").Create(&issueInsert).Error
+	if errInsert != nil {
+		log.Println(errInsert)
+		c.JSON(http.StatusBadRequest, model.ErrorMesssage{
+			Message: "Yêu cầu tạo issue không hợp lệ",
+		})
+		return
+	}
+
+	var rsp = model.CreateIssueRsp{
+		ResponseTime: time.Now().String(),
+		Code:         0,
+		Message:      "Tạo issue thành công",
+		Data:         issueInsert,
+	}
+
+	c.JSON(http.StatusOK, rsp)
+}
+
+func (gc *Controller) ProfileDetail(c *gin.Context) {
+	var headerInfo model.AuthorizationHeader
+
+	if err := c.ShouldBindHeader(&headerInfo); err != nil {
+		c.JSON(200, err)
+	}
+
+	tokenFromHeader := strings.Replace(headerInfo.Token, "Bearer ", "", -1)
+
+	claims := jwt_lib.MapClaims{}
+	tkn, err := jwt_lib.ParseWithClaims(tokenFromHeader, claims, func(token *jwt_lib.Token) (interface{}, error) {
+		return []byte(model.SecretKey), nil
+	})
+
+	if err != nil {
+		if err == jwt_lib.ErrSignatureInvalid {
+			log.Println("error 1")
+			c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+				Message: "Token không hợp lệ",
+			})
+			return
+		}
+		log.Println("error 2", err)
+		c.JSON(http.StatusBadRequest, model.ErrorMesssage{
+			Message: "Bad request",
+		})
+		return
+	}
+
+	if !tkn.Valid {
+		log.Println("error 3")
+		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+			Message: "Token không hợp lệ",
+		})
+		return
+	}
+
+	var userId string
+	var roleFromToken int
+
+	for k, v := range claims {
+		if k == "userId" {
+			userId = v.(string)
+		}
+
+		if k == "Role" {
+			roleFromToken = int(v.(float64))
+		}
+	}
+
+	log.Println("--------", userId, roleFromToken)
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+			Message: "Token không hợp lệ",
+		})
+	}
+
+	issueId := c.Param("id")
+
+	var issuesInfo model.IssueDetailInfo
+	errGetIssues := gc.DB.Raw(`
+		SELECT id, 
+		CASE WHEN status = 0 THEN 'Chưa xử lý' WHEN 1 THEN 'Đang xử lý' ELSE 'Đã xử lý' END AS status, 
+		title, content, address, DATE_FORMAT(created_at, '%d-%m-%Y') AS date, TIME(created_at) AS time, media
+		FROM issue
+		WHERE created_by = ?
+		AND id = ?
+	`, userId, issueId).Scan(&issuesInfo).Error
+	if errGetIssues != nil {
+		log.Println(errGetIssues)
+		c.JSON(http.StatusInternalServerError, model.ErrorMesssage{
+			Message: "Lỗi server",
+		})
+		return
+	}
+
+	var rsp = model.IssueDetailRsp{
+		ResponseTime: time.Now().String(),
+		Code:         0,
+		Message:      "Lấy issue thành công",
+		Data:         issuesInfo,
+	}
+
+	c.JSON(http.StatusOK, rsp)
+}
+

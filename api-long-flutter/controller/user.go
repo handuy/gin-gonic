@@ -3,6 +3,7 @@ package controller
 import (
 	"log"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -453,7 +454,6 @@ func (gc *Controller) ListIssues(c *gin.Context) {
 	c.JSON(http.StatusOK, rsp)
 }
 
-
 func (gc *Controller) IssueDetail(c *gin.Context) {
 	var headerInfo model.AuthorizationHeader
 
@@ -607,13 +607,13 @@ func (gc *Controller) CreateIssue(c *gin.Context) {
 	}
 
 	var issueInsert = model.Issue{
-		ID: xid.New().String(),
-		Title: createIssue.Title,
-		Content: createIssue.Content,
-		Address: createIssue.Address,
+		ID:        xid.New().String(),
+		Title:     createIssue.Title,
+		Content:   createIssue.Content,
+		Address:   createIssue.Address,
 		CreatedAt: time.Now(),
-		Status: 0,
-		Media: createIssue.Media,
+		Status:    0,
+		Media:     createIssue.Media,
 		CreatedBy: userId,
 	}
 
@@ -722,3 +722,122 @@ func (gc *Controller) ProfileDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, rsp)
 }
 
+func (gc *Controller) UploadFile(c *gin.Context) {
+	var headerInfo model.AuthorizationHeader
+
+	if err := c.ShouldBindHeader(&headerInfo); err != nil {
+		c.JSON(400, model.ErrorMesssage{
+			Message: "Token không hợp lệ",
+		})
+		return
+	}
+
+	tokenFromHeader := strings.Replace(headerInfo.Token, "Bearer ", "", -1)
+
+	claims := jwt_lib.MapClaims{}
+	tkn, err := jwt_lib.ParseWithClaims(tokenFromHeader, claims, func(token *jwt_lib.Token) (interface{}, error) {
+		return []byte(model.SecretKey), nil
+	})
+
+	if err != nil {
+		if err == jwt_lib.ErrSignatureInvalid {
+			log.Println("error 1")
+			c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+				Message: "Token không hợp lệ",
+			})
+			return
+		}
+		log.Println("error 2", err)
+		c.JSON(http.StatusBadRequest, model.ErrorMesssage{
+			Message: "Bad request",
+		})
+		return
+	}
+
+	if !tkn.Valid {
+		log.Println("error 3")
+		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+			Message: "Token không hợp lệ",
+		})
+		return
+	}
+
+	var userId string
+	var roleFromToken int
+
+	for k, v := range claims {
+		if k == "userId" {
+			userId = v.(string)
+		}
+
+		if k == "Role" {
+			roleFromToken = int(v.(float64))
+		}
+	}
+
+	log.Println("--------", userId, roleFromToken)
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+			Message: "Token không hợp lệ",
+		})
+		return
+	}
+
+	file, err := c.FormFile("fileData")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	fileType := file.Header["Content-Type"][0]
+
+	// if GetAllowFormat(fileType, allowedMediaType) == "" {
+	// 	c.JSON(http.StatusBadRequest, "Sai định dạng")
+	// 	return
+	// }
+
+	fileID := xid.New().String()
+
+	err = c.SaveUploadedFile(file, path.Join(STATIC_PATH, userId, fileID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.ErrorMesssage{
+			Message: "Server error",
+		})
+		return
+	}
+
+	input := &model.File{
+		Name:       file.Filename,
+		Size:       file.Size,
+		Type:       fileType,
+		UploadedAt: time.Now(),
+		Url:        path.Join(STATIC_PATH, userId, fileID),
+		UploadedBy: userId,
+	}
+
+	err = gc.DB.Create(input).Error
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, model.ErrorMesssage{
+			Message: "Server error",
+		})
+		return
+	}
+
+	var rsp = model.UploadFileResponse{
+		ResponseTime: time.Now().String(),
+		Code:         0,
+		Message:      "Upload file thành công",
+		Data:         input.Url,
+	}
+
+	c.JSON(http.StatusOK, rsp)
+	return
+}
+
+func (gc *Controller) ServeFile(c *gin.Context) {
+	userId := c.Param("userId")
+	fileId := c.Param("fileId")
+
+	c.File(path.Join(STATIC_PATH, userId, fileId))
+}

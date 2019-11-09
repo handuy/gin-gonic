@@ -20,10 +20,10 @@ func main() {
 	ginController.Config = config
 
 	router.POST("/signup", ginController.Register)
-	router.POST("/signup-json", ginController.RegisterJSON)
+	router.POST("/register", ginController.RegisterJSON)
 
-	router.POST("/login", ginController.Login)
-	router.POST("/login-json", ginController.LoginJSON)
+	// router.POST("/login", ginController.Login)
+	router.POST("/login", ginController.LoginJSON)
 
 	router.GET("/issues", jwt.Auth(model.SecretKey), ginController.ListIssues)
 	router.GET("/issues/:id", jwt.Auth(model.SecretKey), ginController.IssueDetail)
@@ -31,5 +31,9 @@ func main() {
 
 	router.GET("/profile", jwt.Auth(model.SecretKey), ginController.ProfileDetail)
 
-	router.Run(":8085")
+	router.POST("/upload-file", jwt.Auth(model.SecretKey), ginController.UploadFile)
+
+	router.GET("/media/static/:userId/:fileId", jwt.Auth(model.SecretKey), ginController.ServeFile)
+
+	router.Run(":8086")
 }

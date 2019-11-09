@@ -118,6 +118,23 @@ type Config struct {
 	} `json:"database"`
 }
 
+type File struct {
+	Id           int        `json:"id"`
+	Name         string     `json:"name"`
+	Size         int64        `json:"size"`
+	Type         string     `json:"type"`
+	UploadedAt   time.Time  `json:"uploaded_at"`
+	Url          string     `json:"url"`
+	UploadedBy   string     `json:"uploaded_by"`
+}
+
+type UploadFileResponse struct {
+	ResponseTime string   `json:"responseTime"`
+	Code         int      `json:"code"`
+	Message      string   `json:"message"`
+	Data         string   `json:"data"`
+}
+
 func DecodeDataFromJsonFile(f *os.File, data interface{}) error {
 	jsonParser := jsoniter.NewDecoder(f)
 	err := jsonParser.Decode(&data)

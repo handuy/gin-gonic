@@ -1,4 +1,7 @@
+## Các ví dụ mẫu cần tham khảo để dựng một API server hoàn chỉnh
+
 1. Dựng GET API trả về JSON
+
 Các ví dụ liên quan:
 - hello-world: https://github.com/handuy/gin-gonic/tree/master/hello-world
 - hello-world-add-route: https://github.com/handuy/gin-gonic/tree/master/hello-world-add-route

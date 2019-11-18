@@ -25,7 +25,7 @@ func main() {
 	// router.POST("/login", ginController.Login)
 	router.POST("/login", ginController.LoginJSON)
 
-	router.GET("/issues", jwt.Auth(model.SecretKey), ginController.ListIssues)
+	router.GET("/issues", ginController.ListIssues)
 	router.GET("/issues/:id", jwt.Auth(model.SecretKey), ginController.IssueDetail)
 	router.POST("/create-issue", jwt.Auth(model.SecretKey), ginController.CreateIssue)
 

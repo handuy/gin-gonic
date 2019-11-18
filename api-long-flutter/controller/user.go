@@ -201,9 +201,24 @@ func (gc *Controller) RegisterJSON(c *gin.Context) {
 		return
 	}
 
+	var user model.User
+	err = gc.DB.Raw(`
+		SELECT id, name, phone, avatar, address, role
+		FROM user
+		WHERE id = ?
+	`, newUser.ID).Scan(&user).Error
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+			Message: "Số điện thoại chưa được đăng kí trong hệ thống",
+		})
+		// log.Println(err)
+		return
+	}
+	log.Println("---------------", user)
+
 	var userInfo = model.UserInfo{
 		UserType:    newUser.Role,
-		UserProfile: newUser,
+		UserProfile: user,
 		Token:       tokenString,
 	}
 
@@ -302,7 +317,7 @@ func (gc *Controller) LoginJSON(c *gin.Context) {
 	//
 	var user model.User
 	err = gc.DB.Raw(`
-		SELECT *
+		SELECT id, name, phone, avatar, address, role
 		FROM user
 		WHERE phone = ?
 	`, loginInfo.Phone).Scan(&user).Error
@@ -367,61 +382,61 @@ func (gc *Controller) LoginJSON(c *gin.Context) {
 }
 
 func (gc *Controller) ListIssues(c *gin.Context) {
-	var headerInfo model.AuthorizationHeader
+	// var headerInfo model.AuthorizationHeader
 
-	if err := c.ShouldBindHeader(&headerInfo); err != nil {
-		c.JSON(200, err)
-	}
+	// if err := c.ShouldBindHeader(&headerInfo); err != nil {
+	// 	c.JSON(200, err)
+	// }
 
-	tokenFromHeader := strings.Replace(headerInfo.Token, "Bearer ", "", -1)
+	// tokenFromHeader := strings.Replace(headerInfo.Token, "Bearer ", "", -1)
 
-	claims := jwt_lib.MapClaims{}
-	tkn, err := jwt_lib.ParseWithClaims(tokenFromHeader, claims, func(token *jwt_lib.Token) (interface{}, error) {
-		return []byte(model.SecretKey), nil
-	})
+	// claims := jwt_lib.MapClaims{}
+	// tkn, err := jwt_lib.ParseWithClaims(tokenFromHeader, claims, func(token *jwt_lib.Token) (interface{}, error) {
+	// 	return []byte(model.SecretKey), nil
+	// })
 
-	if err != nil {
-		if err == jwt_lib.ErrSignatureInvalid {
-			log.Println("error 1")
-			c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
-				Message: "Token không hợp lệ",
-			})
-			return
-		}
-		log.Println("error 2", err)
-		c.JSON(http.StatusBadRequest, model.ErrorMesssage{
-			Message: "Bad request",
-		})
-		return
-	}
+	// if err != nil {
+	// 	if err == jwt_lib.ErrSignatureInvalid {
+	// 		log.Println("error 1")
+	// 		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+	// 			Message: "Token không hợp lệ",
+	// 		})
+	// 		return
+	// 	}
+	// 	log.Println("error 2", err)
+	// 	c.JSON(http.StatusBadRequest, model.ErrorMesssage{
+	// 		Message: "Bad request",
+	// 	})
+	// 	return
+	// }
 
-	if !tkn.Valid {
-		log.Println("error 3")
-		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
-			Message: "Token không hợp lệ",
-		})
-		return
-	}
+	// if !tkn.Valid {
+	// 	log.Println("error 3")
+	// 	c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+	// 		Message: "Token không hợp lệ",
+	// 	})
+	// 	return
+	// }
 
-	var userId string
-	var roleFromToken int
+	// var userId string
+	// var roleFromToken int
 
-	for k, v := range claims {
-		if k == "userId" {
-			userId = v.(string)
-		}
+	// for k, v := range claims {
+	// 	if k == "userId" {
+	// 		userId = v.(string)
+	// 	}
 
-		if k == "Role" {
-			roleFromToken = int(v.(float64))
-		}
-	}
+	// 	if k == "Role" {
+	// 		roleFromToken = int(v.(float64))
+	// 	}
+	// }
 
-	log.Println("--------", userId, roleFromToken)
-	if userId == "" {
-		c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
-			Message: "Token không hợp lệ",
-		})
-	}
+	// log.Println("--------", userId, roleFromToken)
+	// if userId == "" {
+	// 	c.JSON(http.StatusUnauthorized, model.ErrorMesssage{
+	// 		Message: "Token không hợp lệ",
+	// 	})
+	// }
 
 	var issuesInfo []model.IssueGeneralInfo
 	errGetIssues := gc.DB.Raw(`
@@ -429,8 +444,7 @@ func (gc *Controller) ListIssues(c *gin.Context) {
 		CASE WHEN status = 0 THEN 'Chưa xử lý' WHEN 1 THEN 'Đang xử lý' ELSE 'Đã xử lý' END AS processed, 
 		title, address, DATE_FORMAT(created_at, '%d-%m-%Y') AS date, TIME(created_at) AS time 
 		FROM issue
-		WHERE created_by = ?
-	`, userId).Scan(&issuesInfo).Error
+	`).Scan(&issuesInfo).Error
 	if errGetIssues != nil {
 		log.Println(errGetIssues)
 		c.JSON(http.StatusInternalServerError, model.ErrorMesssage{

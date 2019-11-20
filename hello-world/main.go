@@ -14,6 +14,7 @@ func main() {
 	})
 
 	router.GET("/issues", func(c *gin.Context) {
+		// Giả sử đây là danh sách các issue lưu trong database
 		var result = []Issue{
 			{
 				ID: "1",

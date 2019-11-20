@@ -35,6 +35,7 @@ func main() {
 	defer db.Close()
 	db.LogMode(true)
 
+	// Khi code API thì thông tin về user mới sẽ lấy từ file JSON hoặc form data của client gửi lên
 	var newUser = User{
 		Name:      "Golang",
 		Email:     "golang@goole.com",
@@ -50,6 +51,7 @@ func main() {
 		return
 	}
 
+	// Khi code API thì thông tin về post mới sẽ lấy từ file JSON hoặc form data của client gửi lên
 	var newPost = Post{
 		ID: "123abc",
 		Name:      "Golang",

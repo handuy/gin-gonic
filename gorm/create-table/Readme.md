@@ -4,32 +4,43 @@
 
 Xem thêm tại: https://github.com/handuy/gin-gonic/tree/master/gorm/connect-mysql-db
 
-2. Tạo struct định nghĩa bảng
+2. Tạo struct User định nghĩa cấu trúc bảng **users**
 
 ```go
-type Company struct {
-	Id        int `gorm:"primary_key"`
-	Name      string `gorm:"type:varchar(100)"`
-	Address   string `gorm:"type:varchar(100)"`
-	IsGlobal  bool
+type User struct {
+	ID        int       `gorm:"primary_key"`
+	Name      string    
+	Email     string    
+	Age       int       
+	IsActive  bool      
+	Average   float32   
 	CreatedAt time.Time
-	OtherInfo model.ManagerInfo   `sql:"TYPE:json"`
 }
 ```
-trong đó model.ManagerInfo là một struct khác được tạo ở package model
+
+3. Tạo struct Post định nghĩa cấu trúc bảng **posts**
+
 ```go
-type ManagerInfo struct {
-	Name     string
-	Age      int
-	HireDate time.Time
+type Post struct {
+	ID        int       `gorm:"primary_key"`
+	Name      string    `gorm:"type:varchar(50)"`
+	Email     string    `gorm:"type:varchar(100)"`
+	Age       int       `gorm:"type:BIGINT"`
+	IsActive  bool      
+	Average   float32   `gorm:"type:DECIMAL(6,2)"`
+	CreatedAt time.Time
 }
 ```
-struct này sẽ implement 2 method là Value() và Scan()
+Struct Post có thêm các tag để chỉ định rõ kiểu dữ liệu của cột, ví dụ 2 trường Name và Email 
+đều là string nhưng khi tạo bảng **posts** thì cột name sẽ có kiểu varchar(50), còn email là 
+varchar(100)
 
-3. Tạo bảng
+4. Tạo bảng
 
 ```go
-var company Company
-db.CreateTable(company)
+var user User
+var post Post
+
+db.CreateTable(user)
+db.CreateTable(post)
 ```
-Bảng company sẽ có trường other_info có kiểu dữ liệu JSON

@@ -1,18 +1,30 @@
 package main
 
 import (
+	"time"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 type User struct {
-	Id       int    `gorm:"primary_key"`
-	Name     string `gorm:"type:varchar(100)"`
-	Email    string `gorm:"type:varchar(100)"`
-	Password string `gorm:"type:varchar(100)"`
-	Phone    string `gorm:"type:varchar(100)"`
-	Avatar   string `gorm:"type:varchar(100)"`
-	Address  string `gorm:"type:varchar(100)"`
+	ID        int       `gorm:"primary_key"`
+	Name      string    
+	Email     string    
+	Age       int       
+	IsActive  bool      
+	Average   float32   
+	CreatedAt time.Time
+}
+
+type Post struct {
+	ID        int       `gorm:"primary_key"`
+	Name      string    `gorm:"type:varchar(50)"`
+	Email     string    `gorm:"type:varchar(100)"`
+	Age       int       `gorm:"type:BIGINT"`
+	IsActive  bool      
+	Average   float32   `gorm:"type:DECIMAL(6,2)"`
+	CreatedAt time.Time
 }
 
 func main() {
@@ -23,8 +35,10 @@ func main() {
 	db.LogMode(true)
 
 	var user User
+	var post Post
 
 	db.CreateTable(user)
+	db.CreateTable(post)
 
 	defer db.Close()
 }

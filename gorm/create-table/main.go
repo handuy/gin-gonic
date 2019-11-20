@@ -3,9 +3,9 @@ package main
 import (
 	"time"
 
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-)
+	model "gin-gonic/gorm/create-table/model"
+) 
 
 type User struct {
 	ID        int       `gorm:"primary_key"`
@@ -28,10 +28,9 @@ type Post struct {
 }
 
 func main() {
-	db, err := gorm.Open("mysql", "root:123@(localhost:8080)/employees?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic(err)
-	}
+	config := model.SetupConfig()
+	db := model.ConnectDb(config.Database.User, config.Database.Password, config.Database.Database, config.Database.Address)
+	defer db.Close()
 	db.LogMode(true)
 
 	var user User

@@ -2,6 +2,7 @@ package main
 
 import (
 	"time"
+	"log"
 
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	model "gin-gonic/gorm/create-table/model"
@@ -36,8 +37,17 @@ func main() {
 	var user User
 	var post Post
 
-	db.CreateTable(user)
-	db.CreateTable(post)
+	errCreateUser := db.CreateTable(user).Error
+	if errCreateUser != nil {
+		log.Println(errCreateUser)
+		return
+	}
+
+	errCreatePost := db.CreateTable(post).Error
+	if errCreatePost != nil {
+		log.Println(errCreatePost)
+		return
+	}
 
 	defer db.Close()
 }

@@ -3,26 +3,27 @@ package main
 import (
 	"log"
 
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	model "gin-gonic/gorm/select-to-struct/model"
 )
 
-type Employee struct {
-	EmpNo      int
-	FirstName  string
-	LastName   string
+type UserInfo struct {
+	Id      int
+	Name   string
+	Email    string
+	IsActive   int
 }
 
 func main() {
-	db, err := gorm.Open("mysql", "root:123@(localhost:8080)/employees?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic(err)
-	}
+	config := model.SetupConfig()
+	db := model.ConnectDb(config.Database.User, config.Database.Password, config.Database.Database, config.Database.Address)
+	defer db.Close()
+	db.LogMode(true)
 
-	var firstEmployee Employee
-	db.Table("employees").Select("emp_no, first_name, last_name").Where("emp_no = ?", 10001).Scan(&firstEmployee)
+	var userInfo UserInfo
+	db.Table("users").Select("id, name, email, is_active").Where("id = ?", 2).Scan(&userInfo)
 
-	log.Println("Employee", firstEmployee)
+	log.Println("Employee", userInfo)
 
 	defer db.Close()
 }

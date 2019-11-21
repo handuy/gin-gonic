@@ -7,20 +7,21 @@ Xem thêm tại: https://github.com/handuy/gin-gonic/tree/master/gorm/connect-my
 2. Tạo struct hứng dữ liệu đổ về
 
 ```go
-type Employee struct {
-	EmpNo      int
-	FirstName  string
-	LastName   string
+type UserInfo struct {
+	Id      int
+	Name   string
+	Email    string
+	IsActive   int
 }
 ```
-Tên các trường cần khớp với tên các cột tương ứng:
-- Cột tên là emp_no --> Tên trường là EmpNo
-- Cột tên là first_name --> Tên trường là FirstName
-- Cột tên là last_name --> Tên trường là LastName
+Tên các trường cần viết theo kiểu PascalCase, khớp với tên các cột tương ứng:
+- Cột tên là id --> Tên trường là ID
+- Cột tên là name --> Tên trường là Name
+- Cột tên là is_active --> Tên trường là IsActive
 
 3. SELECT từ bảng và đổ vào struct
 
 ```go
-var firstEmployee Employee
-db.Table("employees").Select("emp_no, first_name, last_name").Where("emp_no = ?", 10001).Scan(&firstEmployee)
+var userInfo UserInfo
+db.Table("users").Select("id, name, email, is_active").Where("id = ?", 2).Scan(&userInfo)
 ```

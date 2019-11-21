@@ -2,7 +2,7 @@
 
 1. Setup
 
-Xem thêm tại: https://github.com/handuy/gin-gonic/tree/master/gorm/connect-mysql-db
+Xem thêm tại: https://github.com/handuy/gin-gonic/tree/master/gorm/connect-mysql-read-config
 
 2. Tạo struct hứng dữ liệu đổ về
 

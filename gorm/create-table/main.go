@@ -19,12 +19,12 @@ type User struct {
 }
 
 type Post struct {
-	ID        int       `gorm:"primary_key"`
-	Name      string    `gorm:"type:varchar(50)"`
-	Email     string    `gorm:"type:varchar(100)"`
-	Age       int       `gorm:"type:BIGINT"`
+	ID        string       `gorm:"primary_key"`
+	Name      string       `gorm:"type:varchar(50)"`
+	Email     string       `gorm:"type:varchar(100)"`
+	Age       int          `gorm:"type:BIGINT"`
 	IsActive  bool      
-	Average   float32   `gorm:"type:DECIMAL(6,2)"`
+	Average   float32      `gorm:"type:DECIMAL(6,2)"`
 	CreatedAt time.Time
 }
 

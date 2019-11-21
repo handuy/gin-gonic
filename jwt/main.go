@@ -26,7 +26,7 @@ func main() {
 		// Truyền dữ liệu vào phần Claim của token
 		// Dữ liệu có kiểu map[string]interface{} mô phỏng một cấu trúc dạng JSON
 		token.Claims = jwt_lib.MapClaims{
-			"Id":  "Christopher",
+			"Id":  "Golang",
 			"exp": time.Now().Add(time.Hour * 1).Unix(),
 		}
 
@@ -51,5 +51,5 @@ func main() {
 		c.JSON(200, gin.H{"message": "Hello from private"})
 	})
 
-	r.Run("localhost:8080")
+	r.Run("localhost:8089")
 }

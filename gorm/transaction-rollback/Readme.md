@@ -12,20 +12,28 @@ tx := db.Begin()
 
 3. Sau khi khởi tạo transaction, thay vì dùng db thì ta sẽ dùng tx để CRUD:
 
-- Nếu xảy ra lỗi --> tx.Rollback() để cancel transaction
+- Nếu xảy ra lỗi --> tx.Rollback() để cancel toàn bộ transaction
 - Tất cả các CRUD operation thành công --> tx.Commit() để lưu thay đổi vào disk
 
 ```go
-var department = Department{
-	DeptNo:   "d012",
-	DeptName: "Technical",
+tx := db.Begin()
+if err := tx.Error; err != nil {
+	return
 }
 
-tx := db.Begin()
-
-errorInsert := tx.Exec(`
-	INSERT INTO departments VALUES (?, ?)`, department.DeptNo, department.DeptName).Error
-if errorInsert != nil {
+// Khi code API thì thông tin về user mới sẽ lấy từ file JSON hoặc form data của client gửi lên
+var newUser = User{
+	Name:      "Java",
+	Email:     "java@oracle.com",
+	Age:       20,
+	IsActive:  true,
+	Average:   8.64,
+	CreatedAt: time.Now(),
+}
+errCreateUser := tx.Create(&newUser).Error
+// Khi code API thì chỗ này trả về status 500 InternalServerError
+if errCreateUser != nil {
+	log.Println(errCreateUser)
 	tx.Rollback()
 	return
 }

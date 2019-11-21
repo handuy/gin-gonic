@@ -14,3 +14,13 @@ func main() {
 	router.POST("/upload-video", controller.UploadVideo)
 	router.Run(":8085")
 }
+
+// khai báo biến với các kiểu dữ liệu
+var age int
+var name string
+var result bool
+    
+// gán giá trị cho biến
+age = 26
+name = "duy"
+result = true

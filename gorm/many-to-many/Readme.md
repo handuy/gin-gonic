@@ -4,30 +4,53 @@
 
 Xem thêm tại: https://github.com/handuy/gin-gonic/tree/master/gorm/connect-mysql-read-config
 
-2. Định nghĩa struct tạo bảng
+2. Định nghĩa struct tạo bảng, trong đó StudentClass đóng vai trò tạo bảng trung gian student_classes
 
 ```go
-type User struct {
-	Id          string `gorm:"primary_key"`
-	Name        string `gorm:"type:varchar(100)"`
-	Age         int
+type Student struct {
+	Id   string `gorm:"primary_key"`
+	Name string `gorm:"type:varchar(100)"`
 }
 
-type CreditCard struct {
-	Number    string `gorm:"primary_key"`
-	ExpiredAt time.Time
-	UserId    string
+type Class struct {
+	Id   string `gorm:"primary_key"`
+	Name string
+}
+
+type StudentClass struct {
+	StudentId string `gorm:"primary_key"`
+	ClassId   string `gorm:"primary_key"`
 }
 ```
 
-3. Thêm foregin key constraint cho cột UserId ở bảng CreditCard, link đến primary key Id ở bảng User
+3. Tạo bảng và tạo foreign key cho bảng trung gian
 
 ```go
-db.AutoMigrate(&User{})
-db.AutoMigrate(&CreditCard{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+var student Student
+var class Class
+var studentClass StudentClass
+
+errCreateStudent := db.AutoMigrate(student).Error
+if errCreateStudent != nil {
+	log.Println(errCreateStudent)
+	return
+}
+
+errCreateClass := db.AutoMigrate(class).Error
+if errCreateClass != nil {
+	log.Println(errCreateClass)
+	return
+}
+
+errCreateStudentClass := db.AutoMigrate(studentClass).
+			AddForeignKey("student_id", "students(id)", "RESTRICT", "RESTRICT").
+			AddForeignKey("class_id", "classes(id)", "RESTRICT", "RESTRICT").Error
+if errCreateStudentClass != nil {
+	log.Println(errCreateStudentClass)
+	return
+}
 ```
 
-### Lưu ý
+### Issue liên quan đến tạo Foreign Key constraint bằng tag
 
-Đúng ra là chỉ cần đánh tag ForeignKey vào struct định nghĩa bảng là có thể tạo được foreign key constraint, 
-tuy nhiên chưa tìm ra cách
+https://github.com/jinzhu/gorm/issues/450

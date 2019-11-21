@@ -1,12 +1,19 @@
 package main
 
 import (
-	model "gin-gonic/gorm/raw-update/model"
+	model "gin-gonic/gorm/transaction/model"
+	"log"
+	"time"
 )
 
-type Department struct {
-	DeptNo   string
-	DeptName string
+type User struct {
+	ID        int `gorm:"primary_key"`
+	Name      string
+	Email     string
+	Age       int
+	IsActive  bool
+	Average   float32
+	CreatedAt time.Time
 }
 
 func main() {
@@ -15,20 +22,40 @@ func main() {
 	defer db.Close()
 	db.LogMode(true)
 
-	var department = Department{
-		DeptNo:   "d010",
-		DeptName: "Accounting",
-	}
-
 	tx := db.Begin()
 
-	tx.Create(department)
+	// Khi code API thì thông tin về user mới sẽ lấy từ file JSON hoặc form data của client gửi lên
+	var newUser = User{
+		Name:      "PHP",
+		Email:     "php@elephant.com",
+		Age:       20,
+		IsActive:  false,
+		Average:   8.64,
+		CreatedAt: time.Now(),
+	}
+	errCreateUser := tx.Create(&newUser).Error
+	// Khi code API thì chỗ này trả về status 500 InternalServerError
+	if errCreateUser != nil {
+		log.Println(errCreateUser)
+		tx.Rollback()
+		return
+	}
 
-	tx.Exec(`
-		UPDATE departments
-		SET dept_name = 'Quality Control'
-		WHERE dept_no = ?
-	`, "d006")
+	// Trước khi update
+	var userInfo User
+	// Khi code API thì thông tin về user ID 
+	// và các trường cần update cùng với giá trị tương ứng
+	// sẽ lấy từ form-data/JSON (POST/PUT)
+	// trong ví dụ này tạm thời fix cứng
+	errUpdateUser := tx.Model(&userInfo).Where("id = ?", 3).
+		Updates(map[string]interface{}{"name":"AmazonWS", "email":"cloud@aws.com"}).
+		Error
+	// Khi code API thì chỗ này trả về HTTP status code 500
+	if errUpdateUser != nil {
+		log.Println(errUpdateUser)
+		tx.Rollback()
+		return
+	}
 
 	tx.Commit()
 }

@@ -21,7 +21,13 @@ func main() {
 	db.LogMode(true)
 
 	var userInfo UserInfo
-	db.Table("users").Select("id, name, email, is_active").Where("id = ?", 2).Scan(&userInfo)
+	errGetUser := db.Table("users").Select("id, name, email, is_active").
+				Where("id = ?", 2).Scan(&userInfo).Error
+	// Khi code API thì chỗ này trả về HTTP status code 500
+	if errGetUser != nil {
+		log.Println(errGetUser)
+		return
+	}
 
 	log.Println("Employee", userInfo)
 

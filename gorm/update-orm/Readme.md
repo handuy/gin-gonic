@@ -5,16 +5,16 @@
 Xem thêm tại: https://github.com/handuy/gin-gonic/tree/master/gorm/connect-mysql-read-config
 
 2. Tạo struct để lấy thông tin item cần update
-Trong trường hợp này, ta lấy luôn struct User đã dùng để tạo bảng
+Trong trường hợp này, ta lấy luôn struct Post đã dùng để tạo bảng
 
 ```go
-type User struct {
-	ID        int `gorm:"primary_key"`
-	Name      string
-	Email     string
-	Age       int
-	IsActive  bool
-	Average   float32
+type Post struct {
+	ID        string       `gorm:"primary_key"`
+	Name      string       `gorm:"type:varchar(50)"`
+	Email     string       `gorm:"type:varchar(100)"`
+	Age       int          `gorm:"type:BIGINT"`
+	IsActive  bool      
+	Average   float32      `gorm:"type:DECIMAL(6,2)"`
 	CreatedAt time.Time
 }
 ```
@@ -23,31 +23,31 @@ type User struct {
 
 ```go
 // Trước khi update
-var userInfo User
+var postInfo Post
 // Khi code API thì ID của user sẽ lấy từ đường dẫn (GET request) hoặc form-data/JSON (POST)
-errGetUser := db.Where("id = ?", 3).Find(&userInfo).Error
+errGetPost := db.Where("id = ?", "123abc").Find(&postInfo).Error
 // Khi code API thì chỗ này trả về HTTP status code 500
-if errGetUser != nil {
-	log.Println(errGetUser)
+if errGetPost != nil {
+	log.Println(errGetPost)
 	return
 }
-log.Println("Before update", userInfo)
+log.Println("Before update", postInfo)
 ```
 
 4. Cập nhật giá trị của 2 trường Name và Email của biến userInfo vừa lấy dữ liệu về
 
 ```go
-userInfo.Name = "Kubernetes"
-userInfo.Email = "kuber@open.com"
+postInfo.Name = "Kubernetes"
+postInfo.Email = "kuber@open.com"
 ```
 
-5. "Đẩy" biến userInfo vừa được update dữ liệu vào bảng users
+5. "Đẩy" biến postInfo vừa được update dữ liệu vào bảng posts
 
 ```go
-errUpdateUser := db.Save(&userInfo).Error
+errUpdatePost := db.Save(&postInfo).Error
 // Khi code API thì chỗ này trả về HTTP status code 500
-if errUpdateUser != nil {
-	log.Println(errUpdateUser)
+if errUpdatePost != nil {
+	log.Println(errUpdatePost)
 	return
 }
 ```
@@ -55,13 +55,13 @@ if errUpdateUser != nil {
 6. Kiểm tra xem đã UPDATE thành công chưa
 
 ```go
-var userInfoAfter User
+var postInfoAfter Post
 // Khi code API thì ID của user sẽ lấy từ đường dẫn (GET request) hoặc form-data/JSON (POST)
-errGetUser = db.Where("id = ?", 3).Find(&userInfoAfter).Error
+errGetPost = db.Where("id = ?", "123abc").Find(&postInfoAfter).Error
 // Khi code API thì chỗ này trả về HTTP status code 500
-if errGetUser != nil {
-	log.Println(errGetUser)
+if errGetPost != nil {
+	log.Println(errGetPost)
 	return
 }
-log.Println("After update", userInfoAfter)
+log.Println("After update", postInfoAfter)
 ```

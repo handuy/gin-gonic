@@ -2,26 +2,35 @@
 
 1. Setup
 
-Xem thêm tại: https://github.com/handuy/gin-gonic/tree/master/gorm/connect-mysql-db
+Xem thêm tại: https://github.com/handuy/gin-gonic/tree/master/gorm/connect-mysql-read-config
 
 2. Tạo struct hứng dữ liệu đổ về
+Nếu cần lấy thông tin tất cả các cột thì dùng luôn struct đã dùng để tạo bảng
 
 ```go
-type Employee struct {
-	EmpNo     int
-	BirthDate time.Time
-	FirstName string
-	LastName  string
+type User struct {
+	ID        int `gorm:"primary_key"`
+	Name      string
+	Email     string
+	Age       int
+	IsActive  bool
+	Average   float32
+	CreatedAt time.Time
 }
 ```
 
 3. SELECT từ bảng và đổ vào slice
 
 ```go
-var employeeList []Employee
-	db.Table("employees").Select("emp_no, birth_date, first_name, last_name").Where("first_name LIKE ?", "Cristinel%").Scan(&employeeList)
+var userInfo []User
+errGetUser := db.Find(&userInfo).Error
+// Khi code API thì chỗ này trả về HTTP status code 500
+if errGetUser != nil {
+	log.Println(errGetUser)
+	return
+}
 
-	for _, employee := range employeeList {
-        log.Println("Employee", employee)
-    }
+for _,v := range userInfo {
+	log.Println("Employee", v)
+}
 ```

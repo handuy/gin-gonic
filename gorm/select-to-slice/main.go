@@ -4,29 +4,38 @@ import (
 	"log"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	model "gin-gonic/gorm/select-to-slice/model"
+
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-type Employee struct {
-	EmpNo     int
-	BirthDate time.Time
-	FirstName string
-	LastName  string
+type User struct {
+	ID        int `gorm:"primary_key"`
+	Name      string
+	Email     string
+	Age       int
+	IsActive  bool
+	Average   float32
+	CreatedAt time.Time
 }
 
 func main() {
-	db, err := gorm.Open("mysql", "root:123@(localhost:8080)/employees?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic(err)
+	config := model.SetupConfig()
+	db := model.ConnectDb(config.Database.User, config.Database.Password, config.Database.Database, config.Database.Address)
+	defer db.Close()
+	db.LogMode(true)
+
+	var userInfo []User
+	errGetUser := db.Find(&userInfo).Error
+	// Khi code API thì chỗ này trả về HTTP status code 500
+	if errGetUser != nil {
+		log.Println(errGetUser)
+		return
 	}
 
-	var employeeList []Employee
-	db.Table("employees").Select("emp_no, birth_date, first_name, last_name").Where("first_name LIKE ?", "Cristinel%").Scan(&employeeList)
-
-	for _, employee := range employeeList {
-        log.Println("Employee", employee)
-    }
+	for _,v := range userInfo {
+		log.Println("Employee", v)
+	}
 
 	defer db.Close()
 }

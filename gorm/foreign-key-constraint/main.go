@@ -2,11 +2,12 @@ package main
 
 import (
 	model "gin-gonic/gorm/raw-update/model"
+	"log"
 	"time"
 )
 
 type User struct {
-	Id          string `gorm:"primary_key"`
+	ID          string `gorm:"primary_key"`
 	Name        string `gorm:"type:varchar(100)"`
 	Age         int
 }
@@ -14,7 +15,7 @@ type User struct {
 type CreditCard struct {
 	Number    string `gorm:"primary_key"`
 	ExpiredAt time.Time
-	UserId    string
+	UserID    string
 }
 
 func main() {
@@ -23,6 +24,19 @@ func main() {
 	defer db.Close()
 	db.LogMode(true)
 
-	db.AutoMigrate(&User{})
-	db.AutoMigrate(&CreditCard{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	var user User
+	var creditCard CreditCard
+
+	errCreateUser := db.CreateTable(user).Error
+	if errCreateUser != nil {
+		log.Println(errCreateUser)
+		return
+	}
+
+	errCreateCard := db.CreateTable(creditCard).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE").Error
+	if errCreateCard != nil {
+		log.Println(errCreateCard)
+		return
+	}
+
 }
